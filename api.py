@@ -1,22 +1,29 @@
-import json
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
-from typing import Optional
+# api.py
+from flask import Flask, request, jsonify
 from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field
+from typing import Optional
 
-app = FastAPI()
+app = Flask(__name__)
 
 shared_model = OllamaLLM(model="mistral", temperature=0.0, max_tokens=512)
 
 class InputText(BaseModel):
     input_text: str
 
-@app.post("/extract_cost/")
-async def extract_cost(input_data: InputText):
-    input_text = input_data.input_text
-    
+class CostExtractor(BaseModel):
+    cost: Optional[float] = Field(description="Cost of the service in euros.")
+
+class OrganisationExtractor(BaseModel):
+    organisation: str = Field(description="The geographic area or location where the service is applicable.")
+
+@app.route('/extract_cost/', methods=['POST'])
+def extract_cost():
+    input_data = request.get_json()
+    input_text = input_data['input_text']
+
     prompt = """You are an AI-assistant that extracts structured data from service information pages of the flemish government.
     Details about provided structure will be provided between $$$$ symbols
 
@@ -34,9 +41,6 @@ async def extract_cost(input_data: InputText):
 
     Provide only the json-output as answer.
     """
-
-    class CostExtractor(BaseModel):
-        cost: Optional[float] = Field(description="Cost of the service in euros.")
 
     cost_parser = PydanticOutputParser(pydantic_object=CostExtractor)
 
@@ -50,12 +54,13 @@ async def extract_cost(input_data: InputText):
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
     response["input_text"] = input_text
-    return response
+    return jsonify(response)
 
-@app.post("/extract_organisation/")
-async def extract_organisation(input_data: InputText):
-    input_text = input_data.input_text
-    
+@app.route('/extract_organisation/', methods=['POST'])
+def extract_organisation():
+    input_data = request.get_json()
+    input_text = input_data['input_text']
+
     prompt = """You are an AI-assistant that extracts structured data from service information pages of the flemish government.
     Details about provided structure will be provided between $$$$ symbols
 
@@ -74,9 +79,6 @@ async def extract_organisation(input_data: InputText):
     Provide only the json-output as answer.
     """
 
-    class OrganisationExtractor(BaseModel):
-        organisation: str = Field(description="The geographic area or location where the service is applicable.")
-        
     organisation_parser = PydanticOutputParser(pydantic_object=OrganisationExtractor)
 
     system_prompt = PromptTemplate(
@@ -89,4 +91,7 @@ async def extract_organisation(input_data: InputText):
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
     response["input_text"] = input_text
-    return response
+    return jsonify(response)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=8080)
