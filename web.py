@@ -7,6 +7,10 @@ from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+from string import Template
+from helpers import query
+from escape_helpers import sparql_escape_string
+
 
 shared_model = OllamaLLM(base_url="http://hackathon-ai-7.s.redhost.be:11434", model="mistral", temperature=0.0, max_tokens=512)
 
@@ -20,6 +24,17 @@ class CostExtractor(BaseModel):
 class OrganisationExtractor(BaseModel):
     organisations_list: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text, and separately list their corresponding abbreviations.")
     organisations_list_string: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text. Return exact part of text where organisation was mentioned")
+
+
+class Organization:
+  def __init__(self, uri, name):
+    self.uri = uri
+    self.name = name
+
+class OrganisationMatches:
+  def __init__(self, search_text, matches):
+    self.search_text = search_text
+    self.matches = matches
 
 @app.route('/extract_cost/', methods=['POST', 'OPTIONS'])
 def extract_cost():
@@ -108,7 +123,33 @@ def extract_organisation():
         else:
             new_organisations_list.append(org)
 
+    ld_organizations = []
+
+    # TODO search only in http://mu.semte.ch/graphs/organisations to minimize search area
+    for org in new_organisations_list:
+        query_template = Template("""
+prefix org: <http://www.w3.org/ns/org#>
+prefix skos: <http://www.w3.org/2004/02/skos/core#>
+
+select ?org ?name
+where {
+?org a org:Organization .
+optional { ?org skos:prefLabel ?prefLabel }
+optional { ?org skos:altLabel ?altLabel }
+filter(?prefLabel = $name or ?altLabel=$name).
+bind(?prefLabel as ?name).
+}
+""")
+        query_string = query_template.substitute(name=sparql_escape_string(org))
+        query_result = query(query_string)
+        matches = []
+        for binding in query_result.results.bindings:
+            matches.append(Organization(binding.org.value, binding.name.value))
+        ld_organizations.append(OrganisationMatches(org, matches))
+
     response["organisations_list"] = new_organisations_list
+    response["organisations_linked_data_list"] = ld_organizations
+
     return _corsify_actual_response(jsonify(response))
 
 def _build_cors_preflight_response():
