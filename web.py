@@ -15,9 +15,11 @@ class InputText(BaseModel):
 
 class CostExtractor(BaseModel):
     cost: Optional[float] = Field(description="Cost of the service in euros.")
+    cost_string: Optional[str] = Field(description="If cost value is provided as string not as number return exact! words. Example: twenty euro")
 
 class OrganisationExtractor(BaseModel):
     organisations_list: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text, and separately list their corresponding abbreviations.")
+    organisations_list_string: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text. Return exact part of text where organisation was mentioned")
 
 @app.route('/extract_cost/', methods=['POST', 'OPTIONS'])
 def extract_cost():
@@ -56,7 +58,6 @@ def extract_cost():
     chain = system_prompt | shared_model | cost_parser
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
-    response["input_text"] = input_text
     return _corsify_actual_response(jsonify(response))
 
 @app.route('/extract_organisation/', methods=['POST','OPTIONS'])
@@ -95,7 +96,6 @@ def extract_organisation():
     chain = system_prompt | shared_model | organisation_parser
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
-    response["input_text"] = input_text
     new_organisations_list = []
 
     for org in response["organisations_list"]:
