@@ -26,14 +26,14 @@ The application provides two endpoints:
 Example usage:
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"input_text": "The cost of this service is 25 euros."}' http://localhost:8000/extract_cost/
+curl -X POST -H "Content-Type: application/json" -d '{"input_text": "20 euro te betalen bij de aanvraag of bij het afhalen wanneer je het voorlopig rijbewijs online hebt aangevraagd."}' http://localhost:8080/extract_cost/
 ```
 
 Response:
 ```json
 {
-  "cost": 25.0,
-  "input_text": "The cost of this service is 25 euros."
+  "cost": 20.0,
+  "input_text": "20 euro te betalen bij de aanvraag of bij het afhalen wanneer je het voorlopig rijbewijs online hebt aangevraagd."
 }
 ```
 
@@ -42,14 +42,17 @@ Response:
 Example usage:
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"input_text": "This service is provided by the Flemish government."}' http://localhost:8000/extract_organisation/
+curl -X POST -H "Content-Type: application/json" -d '{"input_text": "Je hebt, als je voeding wilt verkopen, een registratie, erkenning of toelating van het Federaal Agentschap voor de Veiligheid van de Voedselketen (FAVV)."}' http://localhost:8080/extract_organisation/
 ```
 
 Response:
 ```json
 {
-  "organisation": "Flemish government",
-  "input_text": "This service is provided by the Flemish government."
+  "organisations_list": [
+    "Federaal Agentschap voor de Veiligheid van de Voedselketen",
+    "FAVV"
+  ],
+  "input_text": "Je hebt, als je voeding wilt verkopen, een registratie, erkenning of toelating van het Federaal Agentschap voor de Veiligheid van de Voedselketen (FAVV)."
 }
 ```
 
