@@ -10,7 +10,6 @@ from typing import Optional, List
 
 shared_model = OllamaLLM(base_url="http://hackathon-ai-7.s.redhost.be:11434", model="mistral", temperature=0.0, max_tokens=512)
 
-
 class InputText(BaseModel):
     input_text: str
 
