@@ -1,6 +1,6 @@
 # api.py
 import re
-from flask import Flask, request, jsonify
+from flask import request, jsonify, make_response
 from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -19,8 +19,11 @@ class CostExtractor(BaseModel):
 class OrganisationExtractor(BaseModel):
     organisations_list: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text, and separately list their corresponding abbreviations.")
 
-@app.route('/extract_cost/', methods=['POST'])
+@app.route('/extract_cost/', methods=['POST', 'OPTIONS'])
 def extract_cost():
+    if request.method== "OPTIONS":
+        return _build_cors_preflight_response()
+
     input_data = request.get_json()
     input_text = input_data['input_text']
 
@@ -54,10 +57,12 @@ def extract_cost():
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
     response["input_text"] = input_text
-    return jsonify(response)
+    return _corsify_actual_response(jsonify(response))
 
-@app.route('/extract_organisation/', methods=['POST'])
+@app.route('/extract_organisation/', methods=['POST','OPTIONS'])
 def extract_organisation():
+    if request.method== "OPTIONS":
+        return _build_cors_preflight_response()
     input_data = request.get_json()
     input_text = input_data['input_text']
 
@@ -104,4 +109,15 @@ def extract_organisation():
             new_organisations_list.append(org)
 
     response["organisations_list"] = new_organisations_list
-    return jsonify(response)
+    return _corsify_actual_response(jsonify(response))
+
+def _build_cors_preflight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
+
+def _corsify_actual_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
