@@ -1,10 +1,11 @@
 # api.py
-from flask import request, jsonify
+import re
+from flask import Flask, request, jsonify
 from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 
 shared_model = OllamaLLM(base_url="http://hackathon-ai-7.s.redhost.be:11434", model="mistral", temperature=0.0, max_tokens=512)
@@ -16,7 +17,7 @@ class CostExtractor(BaseModel):
     cost: Optional[float] = Field(description="Cost of the service in euros.")
 
 class OrganisationExtractor(BaseModel):
-    organisation: str = Field(description="The geographic area or location where the service is applicable.")
+    organisations_list: List[str] = Field(description="Identify and list the full names of flemish government organizations mentioned in the text, and separately list their corresponding abbreviations.")
 
 @app.route('/extract_cost/', methods=['POST'])
 def extract_cost():
@@ -90,4 +91,17 @@ def extract_organisation():
     response = chain.invoke({"input_text": input_text})
     response = response.model_dump()
     response["input_text"] = input_text
+    new_organisations_list = []
+
+    for org in response["organisations_list"]:
+        match = re.search(r'\((.*?)\)', org)
+        if match:
+            abbreviation = match.group(1)
+            new_org = re.sub(r'\(.*?\)', '', org).strip()
+            new_organisations_list.append(new_org)
+            new_organisations_list.append(abbreviation)
+        else:
+            new_organisations_list.append(org)
+
+    response["organisations_list"] = new_organisations_list
     return jsonify(response)
