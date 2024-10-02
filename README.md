@@ -1,7 +1,7 @@
 # Flemish Government Service Information Extractor
 
 ## Introduction
-This project is a FastAPI-based web application that extracts structured data from service information pages of the Flemish government. The application uses the LangChain library and the OllamaLLM model to process the input text and extract relevant information, such as the cost of the service and the organization responsible for it.
+This project is a Flask-based web application that extracts structured data from service information pages of the Flemish government. The application uses the LangChain library and the OllamaLLM model to process the input text and extract relevant information, such as the cost of the service and the organization responsible for it.
 
 ## Installation
 To run this application, you'll need to have the following dependencies installed:
@@ -26,18 +26,18 @@ The application provides two endpoints:
 Example usage:
 
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"input_text": "20 euro te betalen bij de aanvraag of bij het afhalen wanneer je het voorlopig rijbewijs online hebt aangevraagd."}' http://localhost:8080/extract_cost/
+curl -X POST -H "Content-Type: application/json" -d '{"input_text": "Twintig euro te betalen bij de aanvraag of bij het afhalen wanneer je het voorlopig rijbewijs online hebt aangevraagd."}' http://localhost:8080/extract_cost/
 ```
 
 Response:
 ```json
 {
   "cost": 20.0,
-  "input_text": "20 euro te betalen bij de aanvraag of bij het afhalen wanneer je het voorlopig rijbewijs online hebt aangevraagd."
+  "cost_string": "twintig euro"
 }
 ```
 
-2. `/extract_organisation/`: This endpoint takes an `input_text` parameter and returns a JSON response containing the extracted organization responsible for the service.
+2. `/extract_organisation/`: This endpoint takes an `input_text` parameter and returns a JSON response containing the extracted list of organizations which appears in text.
 
 Example usage:
 
@@ -52,7 +52,7 @@ Response:
     "Federaal Agentschap voor de Veiligheid van de Voedselketen",
     "FAVV"
   ],
-  "input_text": "Je hebt, als je voeding wilt verkopen, een registratie, erkenning of toelating van het Federaal Agentschap voor de Veiligheid van de Voedselketen (FAVV)."
+  "organisations_list_string": ["Je hebt, als je voeding wilt verkopen, een registratie, erkenning of toelating van het Federaal Agentschap voor de Veiligheid van de Voedselketen (FAVV)."]
 }
 ```
 
