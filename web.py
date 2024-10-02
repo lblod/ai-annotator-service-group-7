@@ -1,14 +1,13 @@
 # api.py
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from typing import Optional
 
-app = Flask(__name__)
 
-shared_model = OllamaLLM(model="mistral", temperature=0.0, max_tokens=512)
+shared_model = OllamaLLM(base_url="http://hackathon-ai-7.s.redhost.be:11434", model="mistral", temperature=0.0, max_tokens=512)
 
 class InputText(BaseModel):
     input_text: str
@@ -92,6 +91,3 @@ def extract_organisation():
     response = response.model_dump()
     response["input_text"] = input_text
     return jsonify(response)
-
-if __name__ == '__main__':
-    app.run(debug=True, port=8080)
