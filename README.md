@@ -7,7 +7,7 @@ This project is a FastAPI-based web application that extracts structured data fr
 To run this application, you'll need to have the following dependencies installed:
 
 - Python 3.7 or later
-- FastAPI
+- Flask
 - Pydantic
 - LangChain
 - OllamaLLM
@@ -15,7 +15,7 @@ To run this application, you'll need to have the following dependencies installe
 You can install these dependencies using pip:
 
 ```
-pip install fastapi pydantic langchain langchain-ollama
+pip install flask pydantic langchain langchain-ollama
 ```
 
 ## Usage
