@@ -59,7 +59,7 @@ Response:
 ## Code Structure
 The code is organized as follows:
 
-- `app.py`: This file contains the FastAPI application and the two endpoints for extracting cost and organization information.
+- `web.py`: This file contains the FastAPI application and the two endpoints for extracting cost and organization information.
 - `InputText`: This is a Pydantic model that defines the input data structure for the endpoints.
 - `CostExtractor` and `OrganisationExtractor`: These are Pydantic models that define the output data structure for the respective endpoints.
 - `shared_model`: This is an instance of the `OllamaLLM` model, which is used to process the input text.
